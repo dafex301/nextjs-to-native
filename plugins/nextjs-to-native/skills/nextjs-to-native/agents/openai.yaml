@@ -1,0 +1,4 @@
+interface:
+  display_name: "Next.js to Native"
+  short_description: "Migrate a Next.js web app to native Kotlin/Compose and Swift/SwiftUI apps, screen by screen, with parity checks against the website"
+  default_prompt: "Use $nextjs-to-native to migrate this Next.js app to native: assess and bucket routes, extract a backend contract, capture web baselines, then build each screen natively and verify parity."

@@ -1,0 +1,10 @@
+{
+  "$schema": "https://skills.sh/schemas/skills.sh.schema.json",
+  "groupings": [
+    {
+      "title": "Migration",
+      "description": "Migrate a Next.js web app to fully native Android (Kotlin + Jetpack Compose) and iOS (Swift + SwiftUI) apps.",
+      "skills": ["nextjs-to-native"]
+    }
+  ]
+}

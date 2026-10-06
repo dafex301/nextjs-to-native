@@ -1,0 +1,13 @@
+{
+  "name": "nextjs-to-native",
+  "version": "0.1.0",
+  "description": "Migrate a Next.js web app to fully native Android (Kotlin + Jetpack Compose) and iOS (Swift + SwiftUI) apps, screen by screen, with parity checks against the running website.",
+  "author": {
+    "name": "dapex301",
+    "url": "https://github.com/dapex301"
+  },
+  "homepage": "https://github.com/dapex301/nextjs-to-native",
+  "repository": "https://github.com/dapex301/nextjs-to-native",
+  "license": "MIT",
+  "keywords": ["nextjs", "android", "jetpack-compose", "ios", "swiftui", "migration", "native"]
+}
