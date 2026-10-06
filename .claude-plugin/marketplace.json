@@ -1,8 +1,8 @@
 {
   "name": "nextjs-to-native",
   "owner": {
-    "name": "dapex301",
-    "url": "https://github.com/dapex301"
+    "name": "dafex301",
+    "url": "https://github.com/dafex301"
   },
   "metadata": {
     "description": "Skills for migrating Next.js web apps to native Android (Compose) and iOS (SwiftUI) apps."
