@@ -45,7 +45,7 @@ Check the verification tools for the target platform(s) exist; if one is missing
 
 ### 1 · Assess → worklist
 
-Read `references/shared/assess.md` and produce `migration/` (in the mobile repo once it exists; until then a scratch folder the user chooses) using `templates/migration-progress.md`: route inventory, data dependencies, auth, storage, third-party services, Next.js-specific signals. If the backend lives in its own repo, it is in scope: get access before tracing data. Label every data operation with its topology (`server-in-next`, `client-direct`, `bff-proxy`, `bff-aggregate`, `bff-auth`) — apps often mix them. Bucket every route: `nativize`, `drop` (SEO/marketing/admin pages that do not belong in an app), `webview-link` (rare: legal pages, help center opened in an in-app browser), or `later`.
+Read `references/shared/assess.md` and produce `migration/` (in the mobile repo once it exists; until then a scratch folder the user chooses) using `templates/migration-progress.md`: route inventory, data dependencies, auth, storage, third-party services, static assets (`references/shared/assets.md`), Next.js-specific signals. If the backend lives in its own repo, it is in scope: get access before tracing data. Label every data operation with its topology (`server-in-next`, `client-direct`, `bff-proxy`, `bff-aggregate`, `bff-auth`) — apps often mix them. Bucket every route: `nativize`, `drop` (SEO/marketing/admin pages that do not belong in an app), `webview-link` (rare: legal pages, help center opened in an in-app browser), or `later`.
 
 **Gate:** every `page.tsx` / `pages/*` route is listed and bucketed; every data source for a `nativize` screen is traced to its origin with `file:line` and carries a topology label; the backend repo is accessible or explicitly `unknown`.
 
@@ -76,9 +76,9 @@ Read `references/shared/verify.md` (web side) and `references/shared/screen-spec
 
 ### 5 · Foundation (per platform)
 
-Read `references/shared/repo-layout.md`, the platform's `stack.md`, then `references/shared/design-tokens.md`. Create the mobile repo skeleton if it does not exist (root `CLAUDE.md` from `templates/CLAUDE.root.md`, `templates/gitignore`). Create the platform project with its CLI — `android create` on Android, XcodeGen (`templates/ios/project.yml`) on iOS, never the Xcode wizard — then write the platform `CLAUDE.md` from `templates/`, install the guard hooks, add CI from `templates/ci/`, pin the API contract into `shared/api/` and generate the client, wire auth + secure token storage, generate the theme from `shared/tokens/tokens.json`, and build the primitives the web actually uses against their specs in `shared/components/` (`templates/component-spec.md`). Put every primitive on one **gallery screen** with previews.
+Read `references/shared/repo-layout.md`, the platform's `stack.md`, then `references/shared/design-tokens.md`. Create the mobile repo skeleton if it does not exist (root `CLAUDE.md` from `templates/CLAUDE.root.md`, `templates/gitignore`). Create the platform project with its CLI — `android create` on Android, XcodeGen (`templates/ios/project.yml`) on iOS, never the Xcode wizard — then write the platform `CLAUDE.md` from `templates/`, install the guard hooks, add CI from `templates/ci/`, pin the API contract into `shared/api/` and generate the client, wire auth + secure token storage, generate the theme from `shared/tokens/tokens.json`, import the assets from `shared/assets/` with the generator script (`references/shared/assets.md`, including app icon and splash), and build the primitives the web actually uses against their specs in `shared/components/` (`templates/component-spec.md`). Put every primitive on one **gallery screen** with previews.
 
-**Gate:** the gallery renders on an emulator/simulator and matches the web components at the token level (color, type scale, radius, spacing); every primitive has a component spec; the API client authenticates against the real backend; CI is green.
+**Gate:** the gallery renders on an emulator/simulator and matches the web components at the token level (color, type scale, radius, spacing); every bundled asset a `nativize` screen uses is generated and visible, and the app icon and splash render; every primitive has a component spec; the API client authenticates against the real backend; CI is green.
 
 ### 6 · Vertical slice
 
@@ -110,6 +110,7 @@ Store listings, privacy manifests / data-safety forms, signing, and release trac
 | Next.js / React concept with no native equivalent | `references/shared/nextjs-false-friends.md` |
 | Server Actions / RSC → API, auth, OpenAPI | `references/shared/backend-contract.md` |
 | Tailwind / shadcn / CSS variables → theme | `references/shared/design-tokens.md` |
+| Images, illustrations, fonts, icons, SFX, app icon, splash | `references/shared/assets.md` |
 | What stays brand vs what becomes platform-native | `references/shared/brand-vs-platform.md` |
 | Payments, push, OAuth, analytics, maps, SDKs | `references/shared/services-and-sdks.md` |
 | Writing a screen spec | `references/shared/screen-spec.md` |

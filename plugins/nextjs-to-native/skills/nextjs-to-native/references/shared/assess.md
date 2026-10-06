@@ -47,6 +47,7 @@ Record the label in `DATA.md` for every operation used by a `nativize` screen.
 | i18n | `next-intl`, `next-i18next`, `[locale]` segments | String resources per platform |
 | Realtime | WebSockets, SSE, Pusher, Ably, Supabase realtime, streaming AI (`ai` SDK) | Needs a native client; streaming needs special handling |
 | Media/files | `<input type="file">`, uploads to S3/R2/UploadThing, `next/image` | Native pickers, permissions, presigned uploads |
+| Static assets | `public/**`, imported images/audio/fonts, icon packages, CSS `url()`, Lottie, synthesized Web Audio SFX, brand configs pointing at logos | Bundled vs remote, per-platform formats, oversized files, missing files; see `assets.md` |
 | Third-party browser SDKs | Stripe.js, GA/GTM, Segment, PostHog, Sentry, Intercom, Maps JS, reCAPTCHA | Each needs a native SDK or a decision; see `services-and-sdks.md` |
 | Env vars | `.env*`, `NEXT_PUBLIC_*`, `process.env.*` | Public vs secret; secrets never ship in an app binary |
 
@@ -58,6 +59,7 @@ Write these files under `migration/` (templates in `templates/migration-progress
 - **`DATA.md`** — every data source a `nativize` screen touches: topology label, current access path, the backend endpoint behind it (if any), auth mechanism, caching/revalidation rule.
 - **`DEPENDENCIES.md`** — third-party services and SDKs, with the native replacement or the open decision.
 - **`STATE_AND_STORAGE.md`** — cookies, `localStorage`/`sessionStorage`, IndexedDB, URL state (search params used as state), global stores.
+- **`ASSETS.md`** — every static asset a `nativize` screen uses: path, size, users (`file:line`), bundled vs remote, target format, licence; flag oversized and referenced-but-missing files (`assets.md`).
 - **`PARITY_CHECKS.md`** — filled in phase 4 and 7; create it empty now.
 
 ## 4. Bucket every route

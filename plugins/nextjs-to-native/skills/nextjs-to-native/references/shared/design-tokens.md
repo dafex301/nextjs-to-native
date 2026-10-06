@@ -36,6 +36,7 @@ Generate code from `tokens.json` (a small script in `shared/tokens/`, or Style D
 - **SwiftUI:** an asset catalog color set per semantic color (light/dark variants) or a generated `Color` extension, a `Font` extension for the type scale (`Font.custom(_:size:relativeTo:)` so Dynamic Type scales it), spacing/radius constants, and a `ShapeStyle`/environment entry if components need theme injection.
 - **Fonts:** bundle the same font files the web uses (check the license allows app embedding). Google Fonts used via `next/font/google` can be downloaded and bundled.
 - **Icons:** prefer the same icon set to keep the brand. Lucide and Heroicons publish SVGs: convert the ones in use to Android Vector Drawables and iOS asset-catalog SVG/PDF symbols. Use Material Symbols / SF Symbols only in platform-first mode or for system affordances.
+- **Everything else** (illustrations, images, animations, SFX, app icon, splash) and the conversion pipeline: see `assets.md`.
 
 ## 4. Components: one contract, two implementations
 

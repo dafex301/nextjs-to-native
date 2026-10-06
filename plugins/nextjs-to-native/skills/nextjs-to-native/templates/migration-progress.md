@@ -86,6 +86,21 @@ Each decision is a dated record in `docs/decisions/` (`templates/adr.md`). This 
 
 ---
 
+## `migration/ASSETS.md`
+
+```markdown
+Visual source: <web repo @ commit | redesign repo/URL>   Import: <phase 5 | blocked: reason>
+
+| asset | source path | size | used by (file:line) | bundled/remote | android | ios | licence | status |
+|-------|-------------|------|---------------------|----------------|---------|-----|---------|--------|
+| logo | public/brand/logo.svg | 6 KB | components/header.tsx:12 | bundled | VectorDrawable | asset catalog SVG | own | ready |
+| course art | API `course.image_url` | — | components/course-card.tsx:30 | remote | Coil | caching loader | — | n/a |
+| hero | public/images/hero.png | 3.1 MB | app/home/page.tsx:8 | bundled | WebP densities | @2x/@3x | stock (check) | oversized |
+| app icon | — | — | — | bundled | adaptive + monochrome | .icon | own | needs source art |
+```
+
+---
+
 ## `migration/PARITY_CHECKS.md`
 
 ```markdown
