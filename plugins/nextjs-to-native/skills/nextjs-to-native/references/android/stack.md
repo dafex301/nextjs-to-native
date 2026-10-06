@@ -38,11 +38,14 @@ Missing pieces: install Android CLI (`brew install --cask android-cli` on macOS,
 
 ## Scaffold (phase 5)
 
-- `android create --list` to see templates; `android create <template> --name="<App>" --application-id=<id> --output=<dir>`.
-- Apply the defaults above, enable edge-to-edge (`enableEdgeToEdge()`), disable dynamic color in brand-first mode.
+Create the project with Android CLI. Its templates are the same ones the Android Studio "New Project" wizard uses, so the result is identical, but the agent can run it and the step is reproducible. (Creating it in the Studio wizard and handing it to the agent is equally valid.)
+
+- `android create --list` to see templates; `android create <compose template> --name="<App>" --application-id=<id> --output=android`.
+- Apply the defaults above (version catalog, Hilt, Navigation 3, modules), enable edge-to-edge (`enableEdgeToEdge()`), disable dynamic color in brand-first mode.
 - Configure `buildConfigField`s / product flavors for `dev` / `staging` / `prod` base URLs. No secrets in the app.
-- Generate the API client from OpenAPI as a Gradle task; wrap it in repositories.
-- Write `CLAUDE.md` from `../../templates/CLAUDE.android.md` and install the hooks: copy `../../templates/hooks/*.sh` to `.claude/hooks/` (make them executable) and merge `../../templates/hooks.json` into `.claude/settings.json`.
+- Generate the API client from `shared/api/openapi.yaml` as a Gradle task; wrap it in repositories.
+- Add CI from `../../templates/ci/android.yml`.
+- Write `android/CLAUDE.md` from `../../templates/CLAUDE.android.md` and install the hooks: copy `../../templates/hooks/*.sh` to `.claude/hooks/` (make them executable) and merge `../../templates/hooks.json` into `.claude/settings.json`.
 
 ## Verification loop
 

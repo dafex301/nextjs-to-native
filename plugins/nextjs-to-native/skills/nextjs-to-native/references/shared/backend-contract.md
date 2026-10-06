@@ -31,6 +31,19 @@ after:   page.tsx (RSC) ──┐
 
 Version the API from day one (`/api/v1`). Installed app versions live for months; the web can change freely, the API cannot.
 
+## When the backend is a separate service (BFF topologies)
+
+If assessment labelled operations `client-direct` or `bff-*`, the mobile app talks to the **backend**, not to Next.js. Do not route mobile traffic through the Next.js BFF: it couples app releases to web deploys and usually authenticates by browser cookie.
+
+| Label | Phase 3 work (in the backend repo) |
+|---|---|
+| `client-direct` | Confirm the endpoint accepts bearer tokens and returns stable, typed errors; add it to the OpenAPI spec if missing |
+| `bff-proxy` | Same as above for the proxied endpoint; note any headers the BFF injected (locale, tenant, API keys — keys must never ship in the app) |
+| `bff-aggregate` | Prefer a backend endpoint that returns what the screen needs. Reproduce the composition in the app only when it is trivial and both platforms can share the rule via the screen spec |
+| `bff-auth` | Add a mobile auth flow on the backend (see below); the BFF's cookie session is not reusable |
+
+The backend owns the OpenAPI spec. The mobile repo keeps a pinned copy in `shared/api/` (see `repo-layout.md`).
+
 ## Auth: cookies → bearer tokens
 
 Browser sessions ride on cookies; native apps send `Authorization: Bearer <token>` and store tokens in the Keystore/Keychain.

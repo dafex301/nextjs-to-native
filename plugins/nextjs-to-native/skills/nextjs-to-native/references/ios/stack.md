@@ -38,10 +38,13 @@ Missing pieces: `xcodebuild -downloadPlatform iOS` for a simulator runtime; `bre
 
 ## Scaffold (phase 5)
 
-- `xcodebuildmcp project-scaffolding scaffold-ios --help`, or write `project.yml` and run `xcodegen generate`.
-- Configurations/schemes for `Dev` / `Staging` / `Prod` with base URLs in `.xcconfig` files. No secrets in the app.
-- Add the `swift-openapi-generator` build plugin to the `Networking` package; wrap generated code in services.
-- Write `CLAUDE.md` from `../../templates/CLAUDE.ios.md` and install the hooks: copy `../../templates/hooks/*.sh` to `.claude/hooks/` (make them executable) and merge `../../templates/hooks.json` into `.claude/settings.json` (they block edits to `.pbxproj`, `.xcodeproj/`, entitlements, and signing settings).
+Create the project as code, **never with the Xcode "New Project" wizard**: the wizard produces a `.pbxproj`, which agents cannot edit safely, so every later target, package, capability, or build-setting change would get stuck.
+
+- Copy `../../templates/ios/project.yml` to `ios/project.yml`, fill the slots, create the folders it references (`App/`, `Resources/`, `Tests/`, `UITests/`, `Config/`, `Packages/DesignSystem`, `Packages/Networking`, `Packages/Core`), and run `xcodegen generate`. The `.xcodeproj` is generated and git-ignored; regenerate after adding files or changing `project.yml`. (Tuist is an equivalent alternative for larger projects; `xcodebuildmcp project-scaffolding scaffold-ios` is fine for throwaway prototypes.)
+- Configurations `Debug` / `Staging` / `Release` with base URLs in `.xcconfig` files. No secrets in the app.
+- Add the `swift-openapi-generator` build plugin to the `Networking` package, reading `shared/api/openapi.yaml`; wrap generated code in services.
+- Add CI from `../../templates/ci/ios.yml` (macOS runners are expensive; the path filter keeps it to iOS/shared changes).
+- Write `ios/CLAUDE.md` from `../../templates/CLAUDE.ios.md` and install the hooks: copy `../../templates/hooks/*.sh` to `.claude/hooks/` (make them executable) and merge `../../templates/hooks.json` into `.claude/settings.json` (they block edits to `.pbxproj`, `.xcodeproj/`, entitlements, and signing settings).
 
 ## Verification loop
 

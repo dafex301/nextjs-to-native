@@ -1,0 +1,88 @@
+# XcodeGen spec. Copy to ios/project.yml, fill the <…> slots, run `xcodegen generate`.
+# The generated .xcodeproj is git-ignored; this file is the project's source of truth.
+# Check option names against the current XcodeGen docs before relying on them.
+name: <AppName>
+
+options:
+  bundleIdPrefix: <com.example>
+  deploymentTarget:
+    iOS: "<min iOS version>"
+  createIntermediateGroups: true
+  generateEmptyDirectories: true
+
+configs:
+  Debug: debug
+  Staging: release
+  Release: release
+
+configFiles:
+  Debug: Config/Debug.xcconfig        # API_BASE_URL = <dev url>  (no secrets)
+  Staging: Config/Staging.xcconfig
+  Release: Config/Release.xcconfig
+
+settings:
+  base:
+    SWIFT_VERSION: "<current Swift major>"
+    SWIFT_STRICT_CONCURRENCY: complete
+    DEVELOPMENT_TEAM: ""              # set locally / by the human owning signing
+    CODE_SIGN_STYLE: Automatic
+
+packages:
+  DesignSystem:
+    path: Packages/DesignSystem       # tokens-generated theme + brand components
+  Networking:
+    path: Packages/Networking         # swift-openapi-generator client + services
+  Core:
+    path: Packages/Core
+
+targets:
+  <AppName>:
+    type: application
+    platform: iOS
+    sources:
+      - path: App
+    resources:
+      - path: Resources
+    info:
+      path: App/Info.plist
+      properties:
+        API_BASE_URL: $(API_BASE_URL)
+        UILaunchScreen: {}
+        CFBundleURLTypes:
+          - CFBundleURLSchemes: [<appscheme>]   # deep links for parity checks
+    dependencies:
+      - package: DesignSystem
+      - package: Networking
+      - package: Core
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: <com.example.app>
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+    # entitlements: add via a human-reviewed change (hooks block agent edits to .entitlements)
+
+  <AppName>Tests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [Tests]
+    dependencies:
+      - target: <AppName>
+
+  <AppName>UITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [UITests]
+    dependencies:
+      - target: <AppName>
+
+schemes:
+  <AppName>:
+    build:
+      targets:
+        <AppName>: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets: [<AppName>Tests, <AppName>UITests]
+    archive:
+      config: Release

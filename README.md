@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.1.0-blue" alt="version 0.1.0" />
+  <img src="https://img.shields.io/badge/version-0.2.0-blue" alt="version 0.1.0" />
   <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT license" />
   <img src="https://img.shields.io/badge/Agent%20Skills-compatible-8A2BE2" alt="Agent Skills compatible" />
   <img src="https://img.shields.io/badge/Android-Jetpack%20Compose-3DDC84?logo=android&logoColor=white" alt="Jetpack Compose" />
@@ -25,7 +25,7 @@
 ---
 
 > [!NOTE]
-> **v0.1, still early.** Every phase is written up, but the skill hasn't been through a full real-world migration yet. Issues and PRs are welcome.
+> **v0.2, still early.** Every phase is written up, but the skill hasn't been through a full real-world migration yet. Issues and PRs are welcome.
 
 ## Why
 
@@ -64,8 +64,8 @@ npx skills add dafex301/nextjs-to-native --skill nextjs-to-native
 | # | Phase | What happens | Gate |
 |---|-------|--------------|------|
 | 0 | **Tooling** | Check the verification tools; ask before installing anything | Emulator/simulator boots |
-| 1 | **Assess** | Read the Next.js repo; bucket every route as `nativize`, `drop`, `webview-link`, or `later`; cite every claim with `file:line` | Every route bucketed |
-| 2 | **Decide** | Platform mode, lead platform, visual mode, backend strategy, payments | All decisions recorded |
+| 1 | **Assess** | Read the Next.js repo *and* the backend repo; bucket every route as `nativize`, `drop`, `webview-link`, or `later`; label every data operation's topology (in-Next, client-direct, BFF proxy/aggregate/auth); cite every claim with `file:line` | Every route bucketed |
+| 2 | **Decide** | Platform mode, lead platform, visual mode, backend strategy, payments, repo layout | All decisions recorded as dated ADRs |
 | 3 | **Backend contract** | Turn Server Actions and RSC reads into versioned endpoints with bearer auth and an OpenAPI spec | A real token works from `curl` |
 | 4 | **Baselines + specs** | Screenshot every screen in every state at phone size; write one platform-agnostic spec per screen | Every screen has a spec and baselines |
 | 5 | **Foundation** | Scaffold the app, turn tokens into a native theme, build primitives and a gallery screen, generate the API client, install guard hooks | Gallery matches the web components |
@@ -90,6 +90,28 @@ npx skills add dafex301/nextjs-to-native --skill nextjs-to-native
 | `single` | One platform now, the other later |
 | `lead-follow` *(default for both)* | The second platform trails by 1–2 screens and reuses decisions already settled on the first |
 | `parallel` | Only when each platform has its own reviewer. With agents doing the coding, human review becomes the bottleneck |
+
+## The mobile repo it sets up
+
+The website and backend keep their own repos. The native apps go into one **mobile monorepo**: Kotlin and Swift can't share code, but they can share specs, tokens, assets, and the API contract, and that's what keeps two native apps consistent.
+
+```
+<app>-mobile/
+├── CLAUDE.md                 cross-platform rules (each platform folder has its own CLAUDE.md)
+├── android/                  created with `android create`
+├── ios/                      created with XcodeGen (project.yml), never the Xcode wizard
+├── shared/
+│   ├── tokens/               tokens.json → generated Compose and SwiftUI themes
+│   ├── components/           one spec per component: same API, variants, and states on both platforms
+│   ├── assets/               icons, illustrations, fonts
+│   └── api/                  pinned snapshot of the backend's OpenAPI spec
+├── migration/                living state: worklist, screen specs, parity (baselines git-ignored)
+├── docs/decisions/           dated decision records (2026-10-06-repo-layout.md, …)
+├── docs/notes/               dated notes and findings
+└── .github/workflows/        android.yml and ios.yml, path-filtered
+```
+
+Splitting it into per-platform repos later is a `git filter-repo` per folder.
 
 ## Usage
 
@@ -131,14 +153,18 @@ plugins/nextjs-to-native/skills/nextjs-to-native/
 │   │   ├── services-and-sdks.md     payments (store billing rules), auth, push, analytics, maps
 │   │   ├── screen-spec.md           the platform-agnostic spec format
 │   │   ├── verify.md                baselines and the 4-level parity check
+│   │   ├── repo-layout.md           mobile monorepo, shared artifacts, CI, dated decision records
 │   │   └── run-as-loop.md           unattended screen loop objective
 │   ├── android/                     stack + Android CLI loop · React → Compose · UX patterns
 │   ├── ios/                         stack + XcodeBuildMCP loop · React → SwiftUI · UX patterns
 │   └── port/compose-swiftui.md      two-way Compose ↔ SwiftUI map
 └── templates/
     ├── migration-progress.md        the migration/ files
-    ├── screen-spec.md
-    ├── CLAUDE.android.md / CLAUDE.ios.md
+    ├── screen-spec.md · component-spec.md · adr.md · note.md
+    ├── CLAUDE.root.md · CLAUDE.android.md · CLAUDE.ios.md
+    ├── ios/project.yml              XcodeGen skeleton
+    ├── ci/android.yml · ci/ios.yml  path-filtered GitHub Actions
+    ├── gitignore
     └── hooks.json + hooks/          block .pbxproj / entitlements / baselines edits; auto-format
 ```
 

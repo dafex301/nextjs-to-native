@@ -1,6 +1,6 @@
 # <App name> — iOS
 
-Native iOS client for <product>, migrated from the Next.js website (<web repo>) with the `nextjs-to-native` skill. The website is the spec; `migration/` holds the worklist, screen specs, and baselines.
+Lives in `ios/` of the mobile monorepo; cross-platform rules are in the root `CLAUDE.md`. Native iOS client for <product>, migrated from the Next.js website (<web repo>) with the `nextjs-to-native` skill. The website is the spec; `migration/` holds the worklist, screen specs, and baselines.
 
 ## Project
 
@@ -8,7 +8,7 @@ Native iOS client for <product>, migrated from the Next.js website (<web repo>) 
 - Project generated from `project.yml` with XcodeGen — run `xcodegen generate` after adding files or targets. Never edit `.pbxproj`.
 - Packages: `DesignSystem`, `Networking` (generated OpenAPI client + services), `Core`
 - Configurations / base URLs: Dev `<url>`, Staging `<url>`, Prod `<url>` (in `.xcconfig`, never secrets)
-- Visual mode: brand-first — tokens generated from `migration/tokens.json` into `DesignSystem`
+- Visual mode: brand-first — tokens generated from `shared/tokens/tokens.json` into `DesignSystem`; components follow `shared/components/*.md`
 
 ## Commands
 

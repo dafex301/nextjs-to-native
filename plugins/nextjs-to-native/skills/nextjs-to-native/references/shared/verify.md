@@ -20,7 +20,7 @@ With Playwright, the equivalent is a script that sets `viewport` + `deviceScaleF
 
 Per screen, capture **every state** the spec lists: loaded, empty, loading (throttle the network or pause the request), error (block the endpoint), logged-out/forbidden, and long-content (to see truncation/wrapping). Also capture dark mode if the web supports it. For flows (forms, multi-step), capture each step and record the interaction sequence in the spec.
 
-Store baselines under `migration/baselines/<screen>/<state>.png` and reference them from the screen spec. Never re-capture a baseline to make a failing check pass; if the web changed, re-capture deliberately and note it.
+Store baselines under `migration/baselines/<screen>/<state>.png` and reference them from the screen spec. The folder is git-ignored by default (or tracked with Git LFS for teams; see `repo-layout.md`). Also capture each web component used by the design system under `migration/baselines/_components/` for the gallery comparison. Never re-capture a baseline to make a failing check pass; if the web changed, re-capture deliberately and note it.
 
 Do not commit baselines that contain real user data or secrets; use seeded test accounts.
 

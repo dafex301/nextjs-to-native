@@ -1,0 +1,36 @@
+# Copy to .github/workflows/android.yml in the mobile monorepo.
+# Runs only when Android or shared artifacts change. Check action versions are current before use.
+name: Android
+
+on:
+  pull_request:
+    paths: ["android/**", "shared/**", ".github/workflows/android.yml"]
+  push:
+    branches: [main]
+    paths: ["android/**", "shared/**", ".github/workflows/android.yml"]
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"   # match the project's toolchain
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Lint, unit tests, assemble
+        run: ./gradlew lint testDebugUnitTest assembleDebug --stacktrace
+      - name: Upload reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-reports
+          path: android/**/build/reports/

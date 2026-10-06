@@ -38,10 +38,13 @@ Results (one line per completed or blocked item):
 ## `migration/DATA.md`
 
 ```markdown
-| screen | operation | today (origin, file:line) | endpoint | auth | cache rule | status |
-|--------|-----------|---------------------------|----------|------|------------|--------|
-| orders | list orders | RSC prisma query, app/orders/page.tsx:20 | GET /api/v1/orders | bearer | SWR, refresh on focus | todo |
-| orders | cancel order | server action, app/orders/actions.ts:8 | POST /api/v1/orders/{id}/cancel | bearer | update item | todo |
+Topology: `server-in-next` | `client-direct` | `bff-proxy` | `bff-aggregate` | `bff-auth` (see references/shared/assess.md).
+
+| screen | operation | topology | today (file:line) | backend endpoint | auth | cache rule | status |
+|--------|-----------|----------|-------------------|------------------|------|------------|--------|
+| orders | list orders | bff-proxy | app/api/orders/route.ts:12 → GET {BE}/v1/orders | GET /v1/orders | bearer | SWR, refresh on focus | ready |
+| orders | order summary | bff-aggregate | app/orders/page.tsx:20 (merges /orders + /payments) | — | bearer | refresh on focus | needs endpoint |
+| profile | sign in | bff-auth | app/api/auth/[...nextauth]/route.ts:1 | POST /v1/auth/token | — | — | needs mobile auth |
 ```
 
 ---
@@ -67,16 +70,18 @@ Results (one line per completed or blocked item):
 
 ---
 
-## `migration/DECISIONS.md`
+## `migration/DECISIONS.md` (index of decision records)
+
+Each decision is a dated record in `docs/decisions/` (`templates/adr.md`). This file only indexes them.
 
 ```markdown
-| # | decision | choice | why | date |
-|---|----------|--------|-----|------|
-| 1 | platform mode | lead-follow | single reviewer, Android-majority users | |
-| 2 | lead platform | android | | |
-| 3 | visual mode | brand-first | | |
-| 4 | backend strategy | route handlers in the Next.js app | | |
-| 5 | payments | n/a / store billing / provider SDK | | |
+| date | decision | choice | record |
+|------|----------|--------|--------|
+| 2026-10-06 | platform mode | lead-follow (android leads) | [record](../docs/decisions/2026-10-06-platform-mode.md) |
+| 2026-10-06 | visual mode | brand-first | [record](../docs/decisions/2026-10-06-visual-mode.md) |
+| 2026-10-06 | backend strategy | mobile calls the backend directly | [record](../docs/decisions/2026-10-06-backend-strategy.md) |
+| 2026-10-06 | payments | n/a / store billing / provider SDK | [record](...) |
+| 2026-10-06 | repo layout | mobile monorepo | [record](../docs/decisions/2026-10-06-repo-layout.md) |
 ```
 
 ---

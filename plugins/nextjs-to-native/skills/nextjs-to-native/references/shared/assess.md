@@ -11,7 +11,21 @@ Every material claim gets a citation (`path/to/file.tsx:42`) and a label:
 ## 1. Establish scope
 
 - Find every client of the product: the Next.js app, any separate backend/API repo, any existing mobile app, admin panels. A monorepo (`apps/`, `packages/`, Turborepo/Nx/pnpm workspaces) may hold several.
-- If the backend lives elsewhere and is not accessible, mark everything that depends on it `unknown` and ask for access before phase 3.
+- Find the backend. If the Next.js app calls a separate backend (look for API base URL env vars, API client modules, `fetch` to absolute URLs, rewrites in `next.config.*`), that backend repo is **in scope**: the mobile app will talk to it directly, and phase 3 work happens there. If it is not accessible, mark everything that depends on it `unknown` and ask for access before phase 3.
+
+## 1b. Classify data topology per operation
+
+Apps frequently mix topologies, so label each data operation, not the app:
+
+| Label | How to recognize it | What mobile needs |
+|---|---|---|
+| `server-in-next` | RSC/Server Actions/route handlers query a DB or contain business logic | Extract into an endpoint (`backend-contract.md`) |
+| `client-direct` | Client components call the backend's absolute URL directly | Usually nothing; confirm bearer auth works |
+| `bff-proxy` | A route handler / server action forwards to a backend endpoint unchanged | Call the backend endpoint directly |
+| `bff-aggregate` | Next calls several backend endpoints, merges, filters, or reshapes | Move the composition into a backend endpoint, or reproduce it in the app's repository layer (decide per case) |
+| `bff-auth` | Next holds the backend token server-side (session cookie ↔ backend token) | Mobile authenticates against the backend directly — usually the main phase 3 blocker |
+
+Record the label in `DATA.md` for every operation used by a `nativize` screen.
 
 ## 2. Read the framework signals
 
@@ -41,7 +55,7 @@ Every material claim gets a citation (`path/to/file.tsx:42`) and a label:
 Write these files under `migration/` (templates in `templates/migration-progress.md`):
 
 - **`SCREENS.md`** — one row per route: path, file, auth required, data reads (with origin: RSC fetch / server action / route handler / client fetch / third-party), mutations, client-only interactions, bucket, priority, notes. Include dynamic segments (`[id]`, `[...slug]`), parallel/intercepting routes (`@modal`, `(.)photo`), and route groups (`(marketing)`).
-- **`DATA.md`** — every data source a `nativize` screen touches: current access path, whether an HTTP endpoint already exists, auth mechanism, caching/revalidation rule.
+- **`DATA.md`** — every data source a `nativize` screen touches: topology label, current access path, the backend endpoint behind it (if any), auth mechanism, caching/revalidation rule.
 - **`DEPENDENCIES.md`** — third-party services and SDKs, with the native replacement or the open decision.
 - **`STATE_AND_STORAGE.md`** — cookies, `localStorage`/`sessionStorage`, IndexedDB, URL state (search params used as state), global stores.
 - **`PARITY_CHECKS.md`** — filled in phase 4 and 7; create it empty now.
@@ -62,7 +76,7 @@ Order `nativize` by value: critical paths first (onboarding, sign-in, the core l
 End phase 1 with a short report to the user:
 
 1. Route counts per bucket.
-2. How much logic is trapped server-side (count of Server Actions and RSC data reads used by `nativize` screens) — the size of phase 3.
+2. Topology counts for `nativize` operations (`server-in-next` / `client-direct` / `bff-*`) — the size and location (web repo vs backend repo) of phase 3.
 3. Auth mechanism and what it takes to issue bearer tokens.
 4. Blocking unknowns, most decision-changing first.
 5. Proposed lead platform and vertical-slice flows.

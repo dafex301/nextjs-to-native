@@ -1,13 +1,13 @@
 # <App name> — Android
 
-Native Android client for <product>, migrated from the Next.js website (<web repo>) with the `nextjs-to-native` skill. The website is the spec; `migration/` holds the worklist, screen specs, and baselines.
+Lives in `android/` of the mobile monorepo; cross-platform rules are in the root `CLAUDE.md`. Native Android client for <product>, migrated from the Next.js website (<web repo>) with the `nextjs-to-native` skill. The website is the spec; `migration/` holds the worklist, screen specs, and baselines.
 
 ## Project
 
 - Application id: `<com.example.app>` · minSdk <n> · targetSdk <n>
 - Modules: `:app`, `:core:designsystem`, `:core:network`, `:core:data`, `:feature:*`
 - Flavors / base URLs: dev `<url>`, staging `<url>`, prod `<url>` (in `buildConfigField`, never secrets)
-- Visual mode: brand-first — tokens generated from `migration/tokens.json` into `:core:designsystem`
+- Visual mode: brand-first — tokens generated from `shared/tokens/tokens.json` into `:core:designsystem`; components follow `shared/components/*.md`
 
 ## Commands
 
@@ -18,7 +18,7 @@ Native Android client for <product>, migrated from the Next.js website (<web rep
 - Preview: `android studio render-compose-preview <file> <Preview> --output-image-file=<png>`
 - Screenshot / hierarchy: `android screen capture --output=<png>` · `android layout --pretty`
 - Deep link to a screen: `adb shell am start -a android.intent.action.VIEW -d "<scheme>://<path>"`
-- Regenerate API client: `./gradlew :core:network:openApiGenerate`
+- Regenerate API client (from `shared/api/openapi.yaml`): `./gradlew :core:network:openApiGenerate`
 
 ## Patterns (locked in the vertical slice — follow them)
 

@@ -1,0 +1,45 @@
+# Copy to .github/workflows/ios.yml in the mobile monorepo.
+# macOS runners consume CI minutes much faster than Linux; this workflow runs only when
+# iOS or shared artifacts change. Check action and Xcode versions are current before use.
+name: iOS
+
+on:
+  pull_request:
+    paths: ["ios/**", "shared/**", ".github/workflows/ios.yml"]
+  push:
+    branches: [main]
+    paths: ["ios/**", "shared/**", ".github/workflows/ios.yml"]
+  workflow_dispatch:
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-latest   # pin a specific image if the default lacks the needed Xcode
+    defaults:
+      run:
+        working-directory: ios
+    env:
+      SCHEME: <AppScheme>
+      DESTINATION: platform=iOS Simulator,name=<iPhone model available on the runner>
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app   # or a versioned Xcode_<n>.app path
+      - name: Generate project
+        run: brew install xcodegen && xcodegen generate
+      - name: Build and test
+        run: |
+          set -o pipefail
+          xcodebuild test -scheme "$SCHEME" -destination "$DESTINATION" \
+            -resultBundlePath TestResults.xcresult | tee build.log
+      - name: Upload results on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-results
+          path: |
+            ios/TestResults.xcresult
+            ios/build.log

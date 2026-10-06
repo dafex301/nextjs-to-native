@@ -12,8 +12,9 @@ Fill the `<…>` slots and hand it to the loop runner. If the harness cannot loo
 Goal: migrate the <PLATFORM: Android (Compose) | iOS (SwiftUI)> app for <APP NAME>
 from its Next.js website, one screen per iteration, following the nextjs-to-native skill.
 
-Every iteration, FIRST re-read the nextjs-to-native SKILL.md, the app's CLAUDE.md,
-and migration/SCREENS.md. Then:
+Every iteration, FIRST re-read the nextjs-to-native SKILL.md, the root CLAUDE.md and
+<android|ios>/CLAUDE.md, docs/decisions/ (titles; open any relevant record), and
+migration/SCREENS.md. Then:
 
 1. Take the top unchecked `nativize` screen for <PLATFORM> in migration/SCREENS.md.
    If none remain unresolved (all done or blocked), STOP and report: screens done,
@@ -23,7 +24,8 @@ and migration/SCREENS.md. Then:
    for resolved decisions; the web baseline remains the spec of record.>
 3. Implement it following CLAUDE.md patterns, the platform false-friends and
    patterns references, and brand-vs-platform rules (visual mode: <brand-first|platform-first>).
-   Reuse existing primitives; add a new primitive to the gallery only if the web has it.
+   Reuse existing primitives; add a new primitive only if the web has it, and write its
+   shared/components/<name>.md spec first.
 4. Verify per references/shared/verify.md: previews for every state, run on the
    <emulator|simulator>, compare against baselines (content → behavior → visual →
    platform behavior). Fix code-caused failures now.

@@ -1,7 +1,7 @@
 ---
 name: nextjs-to-native
 description: Migrate an existing Next.js web app to fully native mobile apps — Kotlin + Jetpack Compose on Android and/or Swift + SwiftUI on iOS (not React Native, Expo, Capacitor, or a WebView wrapper). Use when the user wants to turn a Next.js site into a native Android or iOS app, audit a Next.js repo for a native rewrite, extract Server Actions / Server Components into an API a mobile client can call, carry a Tailwind/shadcn design system into Compose or SwiftUI themes, port screens one by one with visual parity checks against the running website, or port a finished native app from one platform to the other (Compose ↔ SwiftUI).
-version: 0.1.0
+version: 0.2.0
 license: MIT
 ---
 
@@ -45,21 +45,22 @@ Check the verification tools for the target platform(s) exist; if one is missing
 
 ### 1 · Assess → worklist
 
-Read `references/shared/assess.md` and produce `migration/` in the native repo (or the web repo if the user prefers) using `templates/migration-progress.md`: route inventory, data dependencies, auth, storage, third-party services, Next.js-specific signals. Bucket every route: `nativize`, `drop` (SEO/marketing/admin pages that do not belong in an app), `webview-link` (rare: legal pages, help center opened in an in-app browser), or `later`.
+Read `references/shared/assess.md` and produce `migration/` (in the mobile repo once it exists; until then a scratch folder the user chooses) using `templates/migration-progress.md`: route inventory, data dependencies, auth, storage, third-party services, Next.js-specific signals. If the backend lives in its own repo, it is in scope: get access before tracing data. Label every data operation with its topology (`server-in-next`, `client-direct`, `bff-proxy`, `bff-aggregate`, `bff-auth`) — apps often mix them. Bucket every route: `nativize`, `drop` (SEO/marketing/admin pages that do not belong in an app), `webview-link` (rare: legal pages, help center opened in an in-app browser), or `later`.
 
-**Gate:** every `page.tsx` / `pages/*` route is listed and bucketed; every data source for a `nativize` screen is traced to its origin with `file:line`.
+**Gate:** every `page.tsx` / `pages/*` route is listed and bucketed; every data source for a `nativize` screen is traced to its origin with `file:line` and carries a topology label; the backend repo is accessible or explicitly `unknown`.
 
 ### 2 · Decide
 
-Record these decisions in `migration/DECISIONS.md` (ask for any the user has not stated):
+Record each decision as a dated record in `docs/decisions/YYYY-MM-DD-<slug>.md` (`templates/adr.md`) and index it in `migration/DECISIONS.md`. Ask for any the user has not stated:
 
 1. **Platform mode** — `single` (one platform now), `lead-follow` (default when both: the second platform trails by 1–2 screens and uses the first as a reference), or `parallel` (only with a separate reviewer per platform; review, not code, is the bottleneck).
 2. **Lead platform** — usually where most users are.
 3. **Visual mode** — `brand-first` (default) or `platform-first`.
 4. **Backend strategy** — extend the Next.js app with route handlers, or point at an existing separate API.
 5. **Payments** — anything sold digitally inside the app must use store billing. Read `references/shared/services-and-sdks.md` *now*; it can change the business model.
+6. **Repo layout** — default: one mobile monorepo (`android/`, `ios/`, `shared/`, `migration/`, `docs/`) next to the existing web and backend repos. Read `references/shared/repo-layout.md`.
 
-**Gate:** all five recorded.
+**Gate:** all six recorded as decision records.
 
 ### 3 · Backend contract
 
@@ -75,9 +76,9 @@ Read `references/shared/verify.md` (web side) and `references/shared/screen-spec
 
 ### 5 · Foundation (per platform)
 
-Read the platform's `stack.md`, then `references/shared/design-tokens.md`. Scaffold the project, write the app's `CLAUDE.md` / `AGENTS.md` from `templates/`, install the guard hooks, generate the API client from OpenAPI, wire auth + secure token storage, convert the web tokens into the platform theme, and build the primitives the web actually uses. Put every primitive on one **gallery screen** with previews.
+Read `references/shared/repo-layout.md`, the platform's `stack.md`, then `references/shared/design-tokens.md`. Create the mobile repo skeleton if it does not exist (root `CLAUDE.md` from `templates/CLAUDE.root.md`, `templates/gitignore`). Create the platform project with its CLI — `android create` on Android, XcodeGen (`templates/ios/project.yml`) on iOS, never the Xcode wizard — then write the platform `CLAUDE.md` from `templates/`, install the guard hooks, add CI from `templates/ci/`, pin the API contract into `shared/api/` and generate the client, wire auth + secure token storage, generate the theme from `shared/tokens/tokens.json`, and build the primitives the web actually uses against their specs in `shared/components/` (`templates/component-spec.md`). Put every primitive on one **gallery screen** with previews.
 
-**Gate:** the gallery renders on an emulator/simulator and matches the web components at the token level (color, type scale, radius, spacing); the API client authenticates against the real backend.
+**Gate:** the gallery renders on an emulator/simulator and matches the web components at the token level (color, type scale, radius, spacing); every primitive has a component spec; the API client authenticates against the real backend; CI is green.
 
 ### 6 · Vertical slice
 
@@ -112,6 +113,8 @@ Store listings, privacy manifests / data-safety forms, signing, and release trac
 | What stays brand vs what becomes platform-native | `references/shared/brand-vs-platform.md` |
 | Payments, push, OAuth, analytics, maps, SDKs | `references/shared/services-and-sdks.md` |
 | Writing a screen spec | `references/shared/screen-spec.md` |
+| Repo layout, shared artifacts, CI, dated decision records | `references/shared/repo-layout.md` |
+| Component specs (same contract on both platforms) | `references/shared/design-tokens.md` → Components |
 | Capturing baselines, parity checks | `references/shared/verify.md` |
 | Running the screen loop unattended | `references/shared/run-as-loop.md` |
 | Android stack, tooling, hooks, verification | `references/android/stack.md` |

@@ -1,0 +1,40 @@
+# Copy to .gitignore at the mobile monorepo root.
+
+# OS / editors
+.DS_Store
+.idea/
+*.swp
+
+# Migration
+migration/baselines/
+
+# Android
+android/.gradle/
+android/**/build/
+android/local.properties
+android/.kotlin/
+android/captures/
+*.apk
+*.aab
+*.jks
+*.keystore
+android/**/google-services.json
+
+# iOS
+ios/*.xcodeproj/
+ios/*.xcworkspace/
+ios/DerivedData/
+ios/build/
+ios/**/.build/
+ios/**/.swiftpm/
+ios/**/GeneratedSources/
+*.xcresult
+*.ipa
+*.dSYM.zip
+*.p12
+*.mobileprovision
+ios/**/GoogleService-Info.plist
+
+# Local secrets / test accounts
+.env*
+*.local
