@@ -3,6 +3,8 @@
 - **Web route:** `/orders/[id]`
 - **Source:** `app/orders/[id]/page.tsx:1`, `app/orders/[id]/actions.ts:1`
 - **Bucket / priority / complexity:** nativize / 3 / stateful
+- **Behavior source:** <web repo @ commit>   **Visual source:** <web | redesign branch/prototype/Figma URL @ commit> (or `blocked: <reason>`)
+- **Fixtures:** `shared/fixtures/<id>/<state>.json`   **Web behavior audit:** `docs/notes/<date>-<id>-web-audit.md` (interactive screens)
 - **Purpose:** <one sentence: what the user comes here to do>
 
 ## Entry points

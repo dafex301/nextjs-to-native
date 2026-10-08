@@ -5,6 +5,8 @@ Lives in `ios/` of the mobile monorepo; cross-platform rules are in the root `CL
 ## Project
 
 - Bundle id: `<com.example.app>` · deployment target iOS <n> · Swift <n> (strict concurrency)
+- Ported from Android in lead-follow mode: names stay parallel (`XxxUiState` ↔ `XxxState`, same component, repository/service, and event names); procedure in the skill's `port/compose-swiftui.md`.
+- ProMotion enabled (`CADisableMinimumFrameDurationOnPhone`); judge performance on Release builds on a device.
 - Project generated from `project.yml` with XcodeGen — run `xcodegen generate` after adding files or targets. Never edit `.pbxproj`.
 - Packages: `DesignSystem`, `Networking` (generated OpenAPI client + services), `Core`
 - Configurations / base URLs: Dev `<url>`, Staging `<url>`, Prod `<url>` (in `.xcconfig`, never secrets)

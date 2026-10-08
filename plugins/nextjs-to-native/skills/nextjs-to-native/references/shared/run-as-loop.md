@@ -26,7 +26,8 @@ migration/SCREENS.md. Then:
    patterns references, and brand-vs-platform rules (visual mode: <brand-first|platform-first>).
    Reuse existing primitives; add a new primitive only if the web has it, and write its
    shared/components/<name>.md spec first.
-4. Verify per references/shared/verify.md: previews for every state, run on the
+4. Verify per references/shared/verify.md: previews for every state, every fixture state
+   in the preview harness, then run on the
    <emulator|simulator>, compare against baselines (content → behavior → visual →
    platform behavior). Fix code-caused failures now.
 5. Add the UI test. Build and run the full test suite; the app must stay green.

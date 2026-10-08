@@ -7,6 +7,8 @@ Write one file per `nativize` screen: `migration/screens/<screen-id>.md`, from `
 ## What goes in
 
 - **Identity** — screen id, web route, source files (`file:line`), bucket, priority, complexity.
+- **Sources** — behavior source and visual source (they differ during a redesign), with commits/URLs.
+- **Fixtures** — the sanitized sample responses per state in `shared/fixtures/<id>/`, used by both preview harnesses and tests.
 - **Purpose** — one sentence: what the user comes here to do.
 - **Entry points** — where users arrive from (tabs, links, deep links, push notifications) and with which parameters.
 - **Data** — each read: endpoint (from the OpenAPI spec), parameters, caching/freshness rule, pagination. Each write: endpoint, payload, optimistic update or not, what refreshes afterwards.

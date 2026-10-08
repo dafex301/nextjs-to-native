@@ -32,6 +32,7 @@ Native Kotlin and Swift share no code. What the monorepo shares is **artifacts**
 │   ├── tokens/                tokens.json + generator script → Compose theme + SwiftUI theme
 │   ├── components/            one spec per design-system component (templates/component-spec.md)
 │   ├── assets/                icons, illustrations, fonts, audio, app icon — single source + generate script (assets.md)
+│   ├── fixtures/              sanitized sample API responses per screen/state, used by both preview harnesses and tests
 │   └── api/                   pinned snapshot of the backend's OpenAPI spec + sync script
 ├── migration/                 living migration state (SCREENS.md, DATA.md, screens/, PARITY_CHECKS.md, ...)
 │   └── baselines/             web screenshots — git-ignored by default (see below)

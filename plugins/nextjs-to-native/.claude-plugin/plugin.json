@@ -1,6 +1,6 @@
 {
   "name": "nextjs-to-native",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Migrate a Next.js web app to fully native Android (Kotlin + Jetpack Compose) and iOS (Swift + SwiftUI) apps, screen by screen, with parity checks against the running website.",
   "author": {
     "name": "dafex301",

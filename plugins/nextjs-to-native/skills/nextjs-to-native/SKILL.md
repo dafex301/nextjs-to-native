@@ -1,7 +1,7 @@
 ---
 name: nextjs-to-native
 description: Migrate an existing Next.js web app to fully native mobile apps — Kotlin + Jetpack Compose on Android and/or Swift + SwiftUI on iOS (not React Native, Expo, Capacitor, or a WebView wrapper). Use when the user wants to turn a Next.js site into a native Android or iOS app, audit a Next.js repo for a native rewrite, extract Server Actions / Server Components into an API a mobile client can call, carry a Tailwind/shadcn design system into Compose or SwiftUI themes, port screens one by one with visual parity checks against the running website, or port a finished native app from one platform to the other (Compose ↔ SwiftUI).
-version: 0.2.0
+version: 0.3.0
 license: MIT
 ---
 
@@ -17,13 +17,14 @@ A Next.js app does not convert to native. There is no transpiler, and there is n
 
 ## Principles
 
-- **The website is the spec.** Behavior, content, states, and brand come from the running web app. Capture them once (phase 4) and verify every native screen against them.
+- **The website is the spec.** Behavior, content, states, and brand come from the running web app. Capture them once (phase 4) and verify every native screen against them. When a redesign is in progress, the behavior spec and the visual spec can come from different sources; record which is which.
 - **Brand-first by default.** Custom components that the web designed on purpose stay custom: port them faithfully as themed composables / views built from the extracted tokens. Use stock Material 3 / SwiftUI controls only where the web itself used a generic control. Platform *behavior* is always native (see `references/shared/brand-vs-platform.md`). Platform-first is an opt-in decision in phase 2.
 - **Backend before screens.** A mobile client cannot call Server Actions, receive RSC payloads, or share cookies with the browser. Until every screen's data has a callable endpoint with bearer auth, screen work only produces mocks.
 - **Evidence, not vibes.** Every inventory claim cites `file:line` and carries a label: `observed`, `assumed`, or `unknown`. Unknowns that block a decision become questions.
 - **Gates, not momentum.** Each phase ends with a gate. Do not start the next phase until the gate passes or the user explicitly waives it.
 - **Verify by running.** A green build proves nothing about a blank or misaligned screen. Render it (preview, emulator, simulator) and compare against the web baseline.
 - **Best-practice defaults, not dogma.** The stacks in `references/android/stack.md` and `references/ios/stack.md` are recommended defaults. If a native project or team convention already exists, follow it. Look up current versions and APIs live; never trust a version number written in this skill.
+- **Smooth is part of done.** Launch fast, no dropped frames, highest refresh rate the display offers when motion is on screen. Measure on release-like builds on real devices (`references/shared/performance.md`).
 - **One screen per pass.** The app builds and runs after every pass. The worklist is the source of truth across sessions.
 
 ## Asking the user
@@ -39,13 +40,13 @@ Inspect the repository before asking anything. When a decision-changing fact can
 
 ### 0 · Tooling
 
-Check the verification tools for the target platform(s) exist; if one is missing, ask before installing it. Required: a web capture tool (`agent-browser`, or Playwright if already present), plus `android` (Android CLI) + `adb` for Android, or `xcodebuildmcp` + Xcode for iOS. Details per platform in each `stack.md`.
+Check the verification tools for the **lead (or single) platform** exist; the follower's tooling is checked at the start of phase 8. If a tool is missing, ask before installing it. Required: a web capture tool (`agent-browser`, or Playwright if already present), plus `android` (Android CLI) + `adb` for Android, or `xcodebuildmcp` + Xcode for iOS. Run the checks from the agent's own shell, not the user's terminal: tools that are only on `PATH` via a shell rc file are invisible to non-interactive agent shells (fix with `env` in the project's `.claude/settings.json`). Shut down any emulator/simulator booted only for the check. Details per platform in each `stack.md`.
 
-**Gate:** each required tool runs (`--version` / `--help`) and an emulator or simulator can boot.
+**Gate:** this skill and the platform skills are loadable in the session (not only present in a source checkout); each required tool runs (`--version` / `--help`) from the agent shell; an emulator or simulator for the lead platform can boot.
 
 ### 1 · Assess → worklist
 
-Read `references/shared/assess.md` and produce `migration/` (in the mobile repo once it exists; until then a scratch folder the user chooses) using `templates/migration-progress.md`: route inventory, data dependencies, auth, storage, third-party services, static assets (`references/shared/assets.md`), Next.js-specific signals. If the backend lives in its own repo, it is in scope: get access before tracing data. Label every data operation with its topology (`server-in-next`, `client-direct`, `bff-proxy`, `bff-aggregate`, `bff-auth`) — apps often mix them. Bucket every route: `nativize`, `drop` (SEO/marketing/admin pages that do not belong in an app), `webview-link` (rare: legal pages, help center opened in an in-app browser), or `later`.
+Read `references/shared/assess.md` and produce `migration/` (in the mobile repo once it exists; until then a scratch folder the user chooses) using `templates/migration-progress.md`: route inventory, data dependencies, auth, storage, third-party services, static assets (`references/shared/assets.md`), Next.js-specific signals. If the backend lives in its own repo, it is in scope: get access before tracing data. Label every data operation with its topology (`server-in-next`, `client-direct`, `bff-proxy`, `bff-aggregate`, `bff-auth`) — apps often mix them. Assess the **deployed** branch of each repo (fetch first; local checkouts are often stale) and record the commits. Also establish: which brand(s) the app ships as when the web is multi-brand, whether the web is mid-redesign (behavior vs visual spec source), and whether native clients of the same backend already exist. Bucket every route: `nativize`, `drop` (SEO/marketing/admin pages that do not belong in an app; needs explicit user confirmation), `webview-link` (rare: legal pages, help center opened in an in-app browser), or `later` (the safe default for anything outside first-release scope). Write the phase report to `docs/notes/YYYY-MM-DD-phase-1-assessment.md`.
 
 **Gate:** every `page.tsx` / `pages/*` route is listed and bucketed; every data source for a `nativize` screen is traced to its origin with `file:line` and carries a topology label; the backend repo is accessible or explicitly `unknown`.
 
@@ -56,51 +57,56 @@ Record each decision as a dated record in `docs/decisions/YYYY-MM-DD-<slug>.md` 
 1. **Platform mode** — `single` (one platform now), `lead-follow` (default when both: the second platform trails by 1–2 screens and uses the first as a reference), or `parallel` (only with a separate reviewer per platform; review, not code, is the bottleneck).
 2. **Lead platform** — usually where most users are.
 3. **Visual mode** — `brand-first` (default) or `platform-first`.
-4. **Backend strategy** — extend the Next.js app with route handlers, or point at an existing separate API.
+4. **Backend strategy** — the native apps call the backend directly. If the logic lives in Next.js, extract it into route handlers; if a separate backend exists (any language), the contract work happens there.
 5. **Payments** — anything sold digitally inside the app must use store billing. Read `references/shared/services-and-sdks.md` *now*; it can change the business model.
 6. **Repo layout** — default: one mobile monorepo (`android/`, `ios/`, `shared/`, `migration/`, `docs/`) next to the existing web and backend repos. Read `references/shared/repo-layout.md`.
+7. **Scope and spec sources** — first-release personas and features (scope cuts are `later`, not `drop`); behavior spec source and visual spec source per screen (current web, redesign branch, prototype, Figma).
+8. **App identity** — brand/theme (fixed or runtime), application ID / bundle ID (permanent after the first store release), minSdk / deployment target (from analytics where possible).
+9. **Guardrails and ownership** — production safety and who owns backend work (`references/shared/app-patterns.md` → Production safety).
+10. **Working agreements** — review rhythm (one screen then wait, or batches), who curates visuals, physical devices available, subagent use, language of communication.
+11. **Performance budgets** — defaults in `references/shared/performance.md` unless the user sets others.
 
-**Gate:** all six recorded as decision records.
+**Gate:** all eleven recorded as decision records (or explicitly deferred with a reason).
 
 ### 3 · Backend contract
 
-Read `references/shared/backend-contract.md`. Expose every Server Action and server-side data read used by a `nativize` screen as an HTTP endpoint, move auth to bearer tokens, and publish an OpenAPI spec the native clients generate code from. This happens in the web/backend repo as its own PRs; do not mix it with native work.
+Read `references/shared/backend-contract.md`. Expose every Server Action and server-side data read used by a `nativize` screen as an HTTP endpoint, move auth to bearer tokens (and harden third-party token verification), make sure self-service account deletion exists, and publish an OpenAPI spec the native clients generate code from — scoped to the endpoints `nativize` screens use. This happens in the web/backend repo as its own PRs; do not mix it with native work.
 
-**Gate:** every `nativize` screen's reads and writes have an endpoint; a token obtained via the auth flow works from `curl`; the OpenAPI spec validates.
+**Gate:** every `nativize` screen's reads and writes have an endpoint; a token obtained via the native sign-in flow works from `curl`; the auth hardening checklist passes; the OpenAPI spec validates.
 
 ### 4 · Baselines + screen specs
 
-Read `references/shared/verify.md` (web side) and `references/shared/screen-spec.md`. For each `nativize` screen, capture the web baseline once — screenshots at a phone viewport for each state (loaded, empty, loading, error, logged-out), plus the accessibility snapshot — and write a platform-agnostic spec from `templates/screen-spec.md`.
+Read `references/shared/verify.md` (web side) and `references/shared/screen-spec.md`. For each `nativize` screen, capture the web baseline once — screenshots at a phone viewport for each state (loaded, empty, loading, error, logged-out), plus the accessibility snapshot — and write a platform-agnostic spec from `templates/screen-spec.md`. For interactive screens (quizzes, feeds, players, multi-step flows), audit timings, thresholds, and transitions from the web source code first (`references/shared/app-patterns.md` → Audit). Save sanitized sample responses per state in `shared/fixtures/` for the preview harness. If the visual source is not ready (redesign in progress), capture behavior baselines now and mark visual baselines `blocked: <reason>`.
 
-**Gate:** every `nativize` screen has a spec and baselines for each of its states.
+**Gate:** every `nativize` screen has a spec, fixtures, and baselines for each of its states (or a recorded block on the visual part).
 
 ### 5 · Foundation (per platform)
 
-Read `references/shared/repo-layout.md`, the platform's `stack.md`, then `references/shared/design-tokens.md`. Create the mobile repo skeleton if it does not exist (root `CLAUDE.md` from `templates/CLAUDE.root.md`, `templates/gitignore`). Create the platform project with its CLI — `android create` on Android, XcodeGen (`templates/ios/project.yml`) on iOS, never the Xcode wizard — then write the platform `CLAUDE.md` from `templates/`, install the guard hooks, add CI from `templates/ci/`, pin the API contract into `shared/api/` and generate the client, wire auth + secure token storage, generate the theme from `shared/tokens/tokens.json`, import the assets from `shared/assets/` with the generator script (`references/shared/assets.md`, including app icon and splash), and build the primitives the web actually uses against their specs in `shared/components/` (`templates/component-spec.md`). Put every primitive on one **gallery screen** with previews.
+Read `references/shared/repo-layout.md`, the platform's `stack.md`, then `references/shared/design-tokens.md`. Create the mobile repo skeleton if it does not exist (root `CLAUDE.md` from `templates/CLAUDE.root.md`, `templates/gitignore`). Create the platform project with its CLI — `android create` on Android, XcodeGen (`templates/ios/project.yml`) on iOS, never the Xcode wizard — then write the platform `CLAUDE.md` from `templates/`, install the guard hooks, add CI from `templates/ci/`, pin the API contract into `shared/api/` and generate the client, wire auth + secure token storage, generate the theme from `shared/tokens/tokens.json`, import the assets from `shared/assets/` with the generator script (`references/shared/assets.md`, including app icon and splash), and build the primitives the web actually uses against their specs in `shared/components/` (`templates/component-spec.md`). Put every primitive on one **gallery screen** with previews, and add the debug-only **preview harness** that renders real screens from `shared/fixtures/` (`references/shared/app-patterns.md`). Set up the performance build: a release-like `profile` build and Baseline Profiles on Android, the ProMotion Info.plist key on iOS (`references/<platform>/performance.md`).
 
 **Gate:** the gallery renders on an emulator/simulator and matches the web components at the token level (color, type scale, radius, spacing); every bundled asset a `nativize` screen uses is generated and visible, and the app icon and splash render; every primitive has a component spec; the API client authenticates against the real backend; CI is green.
 
 ### 6 · Vertical slice
 
-Pick two or three flows that are *representative and hard*, not easy: sign-in + session restore, a list → detail with pagination, and the riskiest boundary (file upload, payments, push, realtime, maps, deep links). Build them end to end. Lock the patterns that emerge (screen structure, state, navigation, error/loading handling, testing) into the app's `CLAUDE.md`.
+Pick two or three flows that are *representative and hard*, not easy: sign-in + session restore, a list → detail with pagination, and the riskiest boundary (file upload, payments, push, realtime, maps, deep links). Build them end to end. Lock the patterns that emerge (screen structure, state, navigation, error/loading handling, testing) into the app's `CLAUDE.md`. Ship the first build to the internal testing track (Play internal testing / TestFlight) now, not in phase 9: real installs surface signing, OAuth client, and device issues early.
 
-**Gate:** the slice runs on a device image, passes parity checks, and the patterns are written down.
+**Gate:** the slice runs on a device image and on a physical device, passes parity checks, meets the performance budgets on the low-end and high-refresh devices, the patterns are written down, and an internal test build is installable.
 
 ### 7 · Screen loop
 
-For each unchecked `nativize` screen, top-down: read its spec → implement (consult the platform false-friends and patterns files) → preview → run → parity check against baselines → write a UI test → check it off in the worklist with a one-line result, or mark it `blocked: <reason> — needs <unlock>` and move on. Never revisit a blocked item without new information. To run this unattended, use `references/shared/run-as-loop.md`.
+For each unchecked `nativize` screen, top-down: read its spec → implement (consult the platform false-friends and patterns files) → preview → render every state in the harness → run against staging → parity check against baselines → frame-time check for screens with long lists, heavy media, or continuous animation → write a UI test (and a Journey for critical flows on Android) → check it off in the worklist with a one-line result, or mark it `blocked: <reason> — needs <unlock>` and move on. Never revisit a blocked item without new information. To run this unattended, use `references/shared/run-as-loop.md`.
 
 **Gate:** no unchecked `nativize` items remain.
 
 ### 8 · Port to the second platform (lead-follow)
 
-Repeat phase 5 for the second platform, then loop over screens using the web baseline as the spec of record and the lead platform's implementation as the reference for resolved decisions (API usage, edge cases, state shape). Read `references/port/compose-swiftui.md`. Re-run parity against the **web** baseline, not against the other native app.
+Check the follower's tooling (phase 0 checks for that platform), repeat phase 5 for it, then follow the per-screen procedure in `references/port/compose-swiftui.md`: the web baseline is the spec of record, the lead platform's implementation is the reference for resolved decisions, tests are ported with the same fixtures, and names stay parallel. Re-run parity against the **web** baseline, not against the other native app.
 
 **Gate:** same as phase 7.
 
 ### 9 · Ship
 
-Store listings, privacy manifests / data-safety forms, signing, and release tracks need a human: prepare checklists and artifacts, but do not handle signing credentials. Platform notes are in each `stack.md`.
+Store listings, privacy manifests / data-safety forms, signing, and release tracks need a human: prepare checklists and artifacts, but do not handle signing credentials. Measure the full performance budget table on release builds. Check current store policy requirements (target API level, 16 KB page size for native libraries, privacy manifests). Platform notes are in each `stack.md`.
 
 ## Topic router
 
@@ -116,7 +122,11 @@ Store listings, privacy manifests / data-safety forms, signing, and release trac
 | Writing a screen spec | `references/shared/screen-spec.md` |
 | Repo layout, shared artifacts, CI, dated decision records | `references/shared/repo-layout.md` |
 | Component specs (same contract on both platforms) | `references/shared/design-tokens.md` → Components |
-| Capturing baselines, parity checks | `references/shared/verify.md` |
+| Capturing baselines, parity checks, device acceptance | `references/shared/verify.md` |
+| Preview harness + fixtures, web-behavior audits, auth session, resumable flows, isolated WebViews, production safety | `references/shared/app-patterns.md` |
+| Performance budgets and measurement | `references/shared/performance.md` |
+| Compose / Android performance and 120 Hz | `references/android/performance.md` |
+| SwiftUI / iOS performance and ProMotion | `references/ios/performance.md` |
 | Running the screen loop unattended | `references/shared/run-as-loop.md` |
 | Android stack, tooling, hooks, verification | `references/android/stack.md` |
 | React / Tailwind idiom → Compose | `references/android/react-to-compose.md` |
@@ -124,13 +134,13 @@ Store listings, privacy manifests / data-safety forms, signing, and release trac
 | iOS stack, tooling, hooks, verification | `references/ios/stack.md` |
 | React / Tailwind idiom → SwiftUI | `references/ios/react-to-swiftui.md` |
 | Web UX pattern → iOS | `references/ios/patterns.md` |
-| Compose ↔ SwiftUI translation | `references/port/compose-swiftui.md` |
+| Porting between platforms: procedure, pitfalls, mappings | `references/port/compose-swiftui.md` |
 
 ## Delegate, don't duplicate
 
 This skill owns the migration order, the Next.js mappings, and the parity loop. For deep platform idioms, use the platform skills when they are installed, and suggest installing them when they are not:
 
-- **Android:** Google's official skills via Android CLI (`android skills list`, `android skills add <name>`): `navigation-3`, `adaptive`, `edge-to-edge`, `testing-setup`, plus `android-cli` for tooling.
+- **Android:** Google's official skills via Android CLI (`android skills list`, `android skills add <name>`): `navigation-3`, `adaptive`, `edge-to-edge`, `testing-setup`, `android-profiler`, plus `android-cli` for tooling (including Journeys).
 - **iOS:** `swiftui-expert-skill` (AvdLee/SwiftUI-Agent-Skill) for SwiftUI correctness and current APIs; `xcodebuildmcp-cli` for builds; topic skills from `dpearson2699/swift-ios-skills` such as `swift-architecture`, `ios-networking`, `authentication`, `swiftui-navigation`, `storekit`, `push-notifications`.
 
 When a delegated skill and this skill disagree on an idiom, the platform skill wins; on migration order and parity, this skill wins.

@@ -44,6 +44,15 @@ If assessment labelled operations `client-direct` or `bff-*`, the mobile app tal
 
 The backend owns the OpenAPI spec. The mobile repo keeps a pinned copy in `shared/api/` (see `repo-layout.md`).
 
+### Server-only libraries in Next.js
+
+Some `server-in-next` routes are not business logic but a Node library with no browser or native equivalent (text processing, PDF, image manipulation). Two options:
+
+1. **Move it to the backend** as a new additive endpoint. Preferred when outputs must match the web exactly, when the library or its data is large (dictionaries, models), or when both platforms need it.
+2. **Reproduce on-device** with a native library per platform. Only when outputs can be made identical and verified against the web on a shared test set (`shared/fixtures/`), and offline use matters.
+
+Either way, write parity tests from real web outputs before switching.
+
 ## Auth: cookies → bearer tokens
 
 Browser sessions ride on cookies; native apps send `Authorization: Bearer <token>` and store tokens in the Keystore/Keychain.
@@ -52,13 +61,24 @@ Browser sessions ride on cookies; native apps send `Authorization: Bearer <token
 - **Clerk, Supabase, Firebase Auth:** use their native Android/iOS SDKs; the backend verifies their JWT. Usually the least work.
 - **Custom JWT in an httpOnly cookie:** also accept the same JWT from the `Authorization` header; add refresh.
 - **OAuth / social sign-in:** native flows (Credential Manager / Sign in with Google on Android, `ASAuthorizationController` / Sign in with Apple on iOS) produce an ID token that the backend exchanges for its own session token. **Apple requires Sign in with Apple** if the iOS app offers other third-party social logins.
-- Session restore, token refresh on `401`, and sign-out (revoke refresh token) are part of the contract; specify them.
+- Session restore, token refresh on `401`, and sign-out (revoke refresh token) are part of the contract; specify them. If refresh tokens rotate and reuse revokes the session, say so in the spec: clients must refresh single-flight (`app-patterns.md`).
+
+### Auth hardening checklist (also when bearer auth already exists)
+
+- [ ] **Audience checks for third-party tokens**: Google ID tokens' `aud`/`azp` checked against an allowlist of the web, Android, and iOS OAuth client IDs; Apple identity tokens' `aud` against the bundle ID(s) and `iss`; nonce verified where the flow uses one.
+- [ ] **Token type matches what native SDKs return**: Android Credential Manager and the Google iOS SDK return **ID tokens**; a backend written for the web may expect an OAuth access token. Add an ID-token path rather than asking the apps to fetch access tokens.
+- [ ] Separate mobile endpoints (e.g. `/auth/mobile/*`) if changing the web's auth endpoints would risk the website.
+- [ ] Short-lived access tokens; refresh with rotation; logout revokes the refresh token server-side.
+- [ ] Self-service **account deletion** endpoint (both stores require in-app deletion when accounts can be created).
+- [ ] Rate limiting and device/session listing behave sensibly for mobile clients (several devices per user).
 
 ## OpenAPI and codegen
 
 The spec is the contract both native apps generate their networking layer from.
 
-- **Source of the spec, in order of preference:** (1) the backend already has one; (2) generate it from the shared Zod schemas (`zod-openapi`, `@asteasolutions/zod-to-openapi`, or the framework's equivalent — check what is current); (3) write it by hand from `DATA.md`, then validate it with a linter (e.g. Redocly or Spectral).
+- **Scope it to the mobile subset**: the endpoints `nativize` screens use, not the whole backend.
+- **Source of the spec, in order of preference:** (1) the backend already has one; (2) generate it from schemas the backend already declares — Zod in TypeScript (`zod-openapi`, `@asteasolutions/zod-to-openapi`), or the backend's own idiom (FastAPI/Pydantic, springdoc, reitit + malli, NestJS decorators, …); (3) write it by hand from `DATA.md` plus the backend's handlers and real responses, then validate it with a linter (e.g. Redocly or Spectral). For backends without schemas (common outside JS), option 3 for the mobile subset is usually the pragmatic path; adding schema coercion in the backend's idiom can follow later.
+- Validate hand-written specs against **real responses** from staging (record them as `shared/fixtures/`), not only against handler code.
 - **Android:** OpenAPI Generator with the Kotlin client targeting Retrofit + kotlinx.serialization (`generatorName = "kotlin"`, `library = "jvm-retrofit2"`, `serializationLibrary = "kotlinx_serialization"`), run as a Gradle task so the client regenerates on build. Confirm current option names in the generator docs.
 - **iOS:** Apple's `swift-openapi-generator` as a SwiftPM build plugin with `swift-openapi-urlsession` as the transport.
 - Keep generated code out of hand edits; wrap it in a repository/service layer the app owns.
@@ -67,7 +87,8 @@ The spec is the contract both native apps generate their networking layer from.
 
 - [ ] Every `nativize` screen's reads and writes map to an endpoint in `DATA.md`.
 - [ ] Every endpoint authenticates via bearer token and returns typed errors.
-- [ ] A token obtained through the real auth flow works with `curl` against a deployed (staging) environment.
+- [ ] A token obtained through the **native** sign-in flow works with `curl` against a deployed (staging) environment.
+- [ ] The auth hardening checklist above passes; account deletion exists or is scheduled with an owner.
 - [ ] The OpenAPI spec validates and both codegen targets compile.
 - [ ] The website still works (its existing tests/build pass) after the extraction.
 - [ ] A staging base URL exists that the native apps can reach (emulators: `10.0.2.2` maps to the host's `localhost` on Android; the iOS simulator shares the host network).

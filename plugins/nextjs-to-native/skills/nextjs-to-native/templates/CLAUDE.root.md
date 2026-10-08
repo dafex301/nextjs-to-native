@@ -18,6 +18,7 @@ Native mobile clients for <product>: Android (Kotlin + Jetpack Compose) in `andr
 - `shared/tokens/tokens.json` → generated themes. Never hand-edit generated theme code; change the tokens and regenerate.
 - `shared/components/*.md` → component contracts. Both platforms use the same component names, parameters, variants, and states.
 - `shared/assets/` → icons, illustrations, fonts.
+- `shared/fixtures/` → sanitized sample responses per screen/state, used by both preview harnesses and tests.
 - `shared/api/openapi.yaml` → pinned copy of the backend contract (source recorded in `shared/api/SOURCE.md`). Update deliberately, then regenerate both clients.
 
 ## Conventions
@@ -27,4 +28,5 @@ Native mobile clients for <product>: Android (Kotlin + Jetpack Compose) in `andr
 - Commits: `feat(android): …`, `feat(ios): …`, `chore(shared): …`, `docs: …`.
 - Release tags per platform: `android/vX.Y.Z`, `ios/vX.Y.Z`.
 - `migration/baselines/` is git-ignored; re-capture from the website when needed.
-- A screen is done when it passes parity against the web baseline on a device image, not when it compiles.
+- A screen is done when it passes parity against the web baseline on a device image (and a physical device where behavior is device-dependent), not when it compiles.
+- Performance budgets: `<cold start ≤ 1.5 s on <low-end device>, no visible hitches at 60/120 Hz>`; measured on release-like builds only.

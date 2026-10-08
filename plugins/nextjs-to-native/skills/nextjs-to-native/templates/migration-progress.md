@@ -80,7 +80,7 @@ Each decision is a dated record in `docs/decisions/` (`templates/adr.md`). This 
 | 2026-10-06 | platform mode | lead-follow (android leads) | [record](../docs/decisions/2026-10-06-platform-mode.md) |
 | 2026-10-06 | visual mode | brand-first | [record](../docs/decisions/2026-10-06-visual-mode.md) |
 | 2026-10-06 | backend strategy | mobile calls the backend directly | [record](../docs/decisions/2026-10-06-backend-strategy.md) |
-| 2026-10-06 | payments | n/a / store billing / provider SDK | [record](...) |
+| <pending> | payments | <pending> | <pending> |
 | 2026-10-06 | repo layout | mobile monorepo | [record](../docs/decisions/2026-10-06-repo-layout.md) |
 ```
 

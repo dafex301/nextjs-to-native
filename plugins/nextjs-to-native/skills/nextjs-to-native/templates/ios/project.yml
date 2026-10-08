@@ -48,6 +48,7 @@ targets:
       properties:
         API_BASE_URL: $(API_BASE_URL)
         UILaunchScreen: {}
+        CADisableMinimumFrameDurationOnPhone: true   # allow 120 Hz animations on ProMotion iPhones
         CFBundleURLTypes:
           - CFBundleURLSchemes: [<appscheme>]   # deep links for parity checks
     dependencies:

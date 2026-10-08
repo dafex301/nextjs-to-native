@@ -66,6 +66,29 @@ Every screen composable has `@Preview`s with fake `UiState` for each state in it
 
 Gotchas: emulators reach the host's `localhost` at `10.0.2.2`; cleartext HTTP needs a debug-only network security config; process death (Developer options → "Don't keep activities") must restore screen state via `SavedStateHandle`.
 
+### Troubleshooting
+
+- **`adb`/`emulator` not found in the agent's shell:** they are often only on `PATH` via `~/.zshrc`, which non-interactive agent shells do not read. Add `ANDROID_HOME` and the `platform-tools`/`emulator` paths to `env` in the project's `.claude/settings.json` (or call them by absolute path) instead of `source ~/.zshrc` in every command.
+- **`android sdk install/update` hangs with no output:** install the packages through Android Studio's SDK Manager (it also handles license acceptance, which the user must do).
+- **`android emulator create <profile>` collides with an existing AVD folder** (case-insensitive file systems): create the AVD from Android Studio's Device Manager, or copy an existing AVD config and change `AvdId`, display name, and `image.sysdir.1`.
+- **AVD stuck (black screen, `RUNNING_LOCKED`) after a cold boot:** cold-boot with `-no-snapshot-load`, or wipe data; if it persists, create a fresh AVD rather than spending time on the broken one.
+- **Emulator has no Google account:** Google sign-in cannot complete. Use the preview harness for auth-gated screens, ask the user to add a test account, or test sign-in on a physical device.
+- Shut down emulators booted only for a check: `adb emu kill`.
+
+### Device and build helpers
+
+- Add a `profile` build type (R8 on, not debuggable, `profileable`) for performance and release-like testing (`performance.md`).
+- A `scripts/run-android.sh` that builds the right flavor/build type, installs on the connected device (preferring a physical phone when present, or an explicit `-s <serial>`), launches, and optionally follows `logcat` filtered to the app saves many agent turns. Always pass `adb -s <serial>` when more than one device is connected.
+- A `scripts/build-play-bundle.sh <flavor> <versionCode> <versionName>` that produces the signed AAB, APK, and R8 mapping file, reading signing config from local, git-ignored files. Agents run it; humans own the keystore.
+
 ## Ship (phase 9)
 
-Human-owned: Play Console account, upload key / Play App Signing, store listing, Data safety form, content rating, target audience. Agent-preparable: release build with R8 (keep rules for serialization/Retrofit), `bundleRelease` AAB, mapping file upload for crash reporting, screenshots per form factor, in-app account deletion if accounts can be created, internal testing track first.
+Human-owned: Play Console account, upload key / Play App Signing, store listing, Data safety form, content rating, target audience. Agent-preparable: release build with R8 (keep rules for serialization/Retrofit), `bundleRelease` AAB, mapping file upload for crash reporting, screenshots per form factor, in-app account deletion if accounts can be created. The internal testing track is used from phase 6 onward, not first introduced here; never promote a staging-flavor build to production. Automating uploads (Gradle Play Publisher or fastlane `supply` with a service account the human creates) is optional.
+
+### Platform requirements to check (confirm current dates and rules live)
+
+- **Target API level:** Google Play requires a recent target API for new apps and updates (API 36 since 31 August 2026 at the time of writing). Targeting the newest stable API is the default.
+- **Edge-to-edge and predictive back** are enforced when targeting API 35/36: design for insets and system back from the start (Google's `edge-to-edge` skill).
+- **Large screens:** from Android 16 (API 36), orientation and resizability restrictions are ignored on large screens (smallest width ≥ 600dp), and targeting API 37 removes the opt-out. Do not rely on portrait locking; make layouts survive tablets, foldables, and desktop windows (Google's `adaptive` skill), even if the first release is phone-first.
+- **16 KB page size:** apps with native code (including `.so` files from SDKs) must support 16 KB pages; check the APK Analyzer / Play Console report. Pure Kotlin apps are usually unaffected.
+- **Play Console warnings** such as missing native debug symbols: upload them when the app ships native libraries.

@@ -4,6 +4,8 @@ Phases 4–8 of [`nextjs-to-native`](../../SKILL.md). A screen passes when the r
 
 ## A. Capture web baselines (phase 4, once)
 
+Capture from the **visual source recorded for the screen** (phase 2): usually the running website, but a redesign branch, prototype, staging URL, or Figma frame when the web is being redesigned. Record the source and commit/URL next to each baseline. Behavior baselines (states, flows) always come from the behavior source.
+
 Run the website locally (`pnpm dev` / `npm run dev`) or use a staging URL, signed in as a test account. Capture at a phone viewport that matches the emulator/simulator you will compare against (e.g. 412×915 for a typical Android phone, 393×852 for a 6.1" iPhone; record the exact size in `PARITY_CHECKS.md`).
 
 With `agent-browser` (preferred; run `agent-browser skills get core` for its current command reference):
@@ -29,8 +31,19 @@ Do not commit baselines that contain real user data or secrets; use seeded test 
 Platform commands live in `../android/stack.md` and `../ios/stack.md`. In short:
 
 - **Fast loop (no device):** Compose `@Preview` rendered via `android studio render-compose-preview`; SwiftUI `#Preview` rendered via Xcode's MCP preview tool, or a snapshot test. Use previews with fake data for every state.
+- **Harness loop (no sign-in, no writes):** open the screen in the debug preview harness with each fixture state via deep link (`app-patterns.md` → Preview harness). This is how screens behind auth or with side effects get verified on an emulator. It is rendering evidence only.
 - **Real loop (device image):** build and run on the emulator/simulator, navigate to the screen (deep link where possible), capture a screenshot and the UI hierarchy (`android layout` / XcodeBuildMCP UI automation describe).
 - **Motion:** for screens with transitions, gestures, or animated states, record a short video (`adb shell screenrecord`, `xcrun simctl io booted recordVideo`) — a still frame cannot show jank or wrong easing.
+
+## Device acceptance
+
+Emulators and simulators are not enough for: performance and frame rate, camera/microphone/speech, audio routing, push, OEM-specific behavior, real sign-in with production OAuth clients, and store-installed builds.
+
+- Agree in phase 2 which physical devices exist (at minimum one low-end Android phone from the target market and one recent iPhone).
+- Some OEM builds (e.g. certain Xiaomi/HyperOS configurations) block adb input injection: the agent can install, capture screenshots and logs, but the user must perform taps. Plan such passes as "agent prepares, user taps, agent reads logs/screenshots".
+- Judge performance only on release-like builds (`performance.md`).
+- Install internal test track builds (Play internal testing / TestFlight) from phase 6 onward; they exercise signing, Play-installed OAuth configuration, and app links that local debug installs do not.
+- A screen with device-dependent behavior is done only after a device pass, recorded in `PARITY_CHECKS.md`.
 
 ## C. Compare
 
@@ -54,4 +67,8 @@ The patterns that survive the idiomatic pass go into the app's `CLAUDE.md` and e
 
 ## UI tests
 
-After a screen passes parity, add a UI test for its critical behavior (Compose UI test / XCUITest, or a Maestro flow if the team prefers cross-platform YAML flows). Screenshot tests (Compose Preview screenshot testing, Roborazzi/Paparazzi, swift-snapshot-testing) lock the visual result so later screens do not regress shared primitives.
+After a screen passes parity, add a UI test for its critical behavior (Compose UI test / XCUITest, or a Maestro flow if the team prefers cross-platform YAML flows).
+
+- **Screenshot tests from previews:** the per-state previews the skill already requires become regression tests with little extra work — Compose Preview Screenshot Testing (`@PreviewTest`, still experimental; follow Google's `testing-setup` skill for the setup that matches your AGP version and do not upgrade AGP just for it), or Roborazzi/Paparazzi; swift-snapshot-testing on iOS. Review the diff reports in code review.
+- **Journeys (Android CLI):** the *Actions* table of a screen spec translates directly into a natural-language journey (`src/journeysTest/*.journey.xml`) that an agent executes on a device. Use them for critical end-to-end flows, as a complement to deterministic tests: they are judged by an agent from the screen and are less repeatable.
+- Port tests along with screens in lead-follow mode, using the same `shared/fixtures/` (`../port/compose-swiftui.md`).

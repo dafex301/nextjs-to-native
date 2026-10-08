@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.2.0-blue" alt="version 0.1.0" />
+  <img src="https://img.shields.io/badge/version-0.3.0-blue" alt="version 0.3.0" />
   <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT license" />
   <img src="https://img.shields.io/badge/Agent%20Skills-compatible-8A2BE2" alt="Agent Skills compatible" />
   <img src="https://img.shields.io/badge/Android-Jetpack%20Compose-3DDC84?logo=android&logoColor=white" alt="Jetpack Compose" />
@@ -25,7 +25,7 @@
 ---
 
 > [!NOTE]
-> **v0.2, still early.** Every phase is written up, but the skill hasn't been through a full real-world migration yet. Issues and PRs are welcome.
+> **v0.3.** Phases 0–7 have now been through one real migration: an Android app built from a production Next.js site with a separate backend, shipped to an internal testing track. v0.3 folds in what that run taught. The iOS port (phase 8) hasn't been run for real yet. Issues and PRs are welcome.
 
 ## Why
 
@@ -52,6 +52,8 @@ This skill hands the agent an ordered process, a gate at the end of each phase, 
 ```bash
 npx skills add dafex301/nextjs-to-native --skill nextjs-to-native
 ```
+
+**Check that it loaded.** Start a new session in your project and confirm `nextjs-to-native` shows up in the agent's skill list (in Claude Code: `/skills`). The plugin install and the skills CLI install to different places, so check whichever one you used. If it isn't listed, the agent can't use it, even if a copy of the repo is on disk.
 
 ## How it works
 
@@ -81,6 +83,7 @@ npx skills add dafex301/nextjs-to-native --skill nextjs-to-native
 - **Backend before screens.** Until each screen's data has an endpoint, screen work only produces mocks.
 - **Evidence, not vibes.** Claims are labeled `observed`, `assumed`, or `unknown`. When something is unknown, the agent asks one question at a time.
 - **Best-practice defaults, not dogma.** If a project or team already has conventions, the skill follows them. Versions are looked up live, never hardcoded.
+- **Smooth is part of done.** Every app gets performance budgets for cold start and frame time, measured on release-like builds on real low-end and high-refresh devices. On iOS that includes the ProMotion opt-in, without which an app's own animations are capped at 60 Hz.
 - **Delegate, don't duplicate.** Deep Compose and SwiftUI idioms come from dedicated platform skills. This skill owns the migration order, the Next.js mappings, and the parity loop.
 
 ### Platform modes
@@ -154,10 +157,14 @@ plugins/nextjs-to-native/skills/nextjs-to-native/
 │   │   ├── screen-spec.md           the platform-agnostic spec format
 │   │   ├── verify.md                baselines and the 4-level parity check
 │   │   ├── repo-layout.md           mobile monorepo, shared artifacts, CI, dated decision records
+│   │   ├── assets.md                images, fonts, SFX, app icon, splash → per-platform resources
+│   │   ├── app-patterns.md          preview harness + shared fixtures, web-behavior audits, auth session,
+│   │   │                            resumable flows, isolated WebViews, production safety
+│   │   ├── performance.md           budgets, devices, where web-ported apps lose frames
 │   │   └── run-as-loop.md           unattended screen loop objective
-│   ├── android/                     stack + Android CLI loop · React → Compose · UX patterns
-│   ├── ios/                         stack + XcodeBuildMCP loop · React → SwiftUI · UX patterns
-│   └── port/compose-swiftui.md      two-way Compose ↔ SwiftUI map
+│   ├── android/                     stack + Android CLI loop · React → Compose · UX patterns · performance (Baseline Profiles, 120 Hz)
+│   ├── ios/                         stack + XcodeBuildMCP loop · React → SwiftUI · UX patterns · performance (ProMotion, Instruments)
+│   └── port/compose-swiftui.md      porting procedure, agent pitfalls, Compose ↔ SwiftUI mappings (UI, data, media)
 └── templates/
     ├── migration-progress.md        the migration/ files
     ├── screen-spec.md · component-spec.md · adr.md · note.md

@@ -66,6 +66,17 @@ Every screen view has `#Preview`s with fake model state for each state in its sp
 
 Gotchas: the simulator shares the host network (`localhost` works), but ATS blocks plain HTTP unless a debug-only exception is configured; test on the smallest supported screen size; keyboard avoidance is automatic in SwiftUI but scroll-to-focused-field often needs `ScrollViewReader`/`scrollPosition`.
 
+Performance setup (phase 5): add `CADisableMinimumFrameDurationOnPhone = YES` to the Info.plist (in `project.yml` under `info.properties`) so the app's own animations can run at 120 Hz on ProMotion iPhones, and confirm it is in the built bundle. See `performance.md`.
+
+### Troubleshooting
+
+- Tools missing in the agent shell: same cause and fix as Android (`env` in `.claude/settings.json`).
+- The simulator cannot show 120 Hz or realistic performance; use a physical device for performance and audio/speech work.
+- Sign in with Google/Apple on the simulator needs a configured test account; use the preview harness for auth-gated screens until then.
+- After changing `project.yml` or adding files, run `xcodegen generate` before building; a missing file in the build usually means the project was not regenerated.
+
 ## Ship (phase 9)
+
+Use TestFlight from phase 6 onward (internal testers), not only at release time.
 
 Human-owned: Apple Developer account, certificates/provisioning (or automatic signing), App Store Connect record, privacy nutrition labels, age rating, review notes and a demo account. Agent-preparable: privacy manifest (`PrivacyInfo.xcprivacy`) covering required-reason APIs and SDKs, purpose strings for every permission, Sign in with Apple if other social logins exist, in-app account deletion, App Store screenshots per device size, TestFlight build via `xcodebuild archive` / CI.
